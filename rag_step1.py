@@ -6,7 +6,7 @@ text = Path("knowledge/greentech.txt").read_text(encoding="utf-8")
 
 doc = Document(page_content=text, metadata={"source" : "greentech.txt"})
 
-splitter = RecursiveCharacterTextSplitter(chunk_size=150, chunk_overlap=30)
+splitter = RecursiveCharacterTextSplitter(chunk_size=120, chunk_overlap=30)
 
 chunks = splitter.split_documents([doc])
 
