@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from rag_core import load_chunks, build_vector_store, answer_question, make_agent, ask_agent
+from rag_core import load_chunks, get_vector_store, answer_question, make_agent, ask_agent
 import uuid
 
 app = Flask(__name__)
@@ -9,7 +9,7 @@ CORS(app)
 
 # Built ONCE when the server starts, not on every request
 chunks = load_chunks()
-store = build_vector_store(chunks=chunks)
+store = get_vector_store(chunks=chunks)
 agent = make_agent(store)
 
 

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tech Assistant</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="chat">
+    <header>
+      <h1>Tech Assistant</h1>
+      <button id="new-chat" type="button">New chat</button>
+    </header>
+    <div id="messages" class="messages" aria-live="polite"></div>
+    <form id="chat-form">
+      <input id="question" type="text" autocomplete="off" required
+             placeholder="Ask about warranty, returns, shipping..." />
+      <button id="send" type="submit">Send</button>
+    </form>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
