@@ -1,10 +1,21 @@
 const API_URL = "http://localhost:5000/chat";
 
-const messagesEl = document.getElementById("messages");
+// Edit these to match the PDFs you loaded.
+const SUGGESTIONS = [
+  "What is a checkpointer?",
+  "How does chunk overlap work?",
+  "Why do we use embeddings?",
+];
+
+const threadEl = document.getElementById("thread");
+const emptyEl = document.getElementById("empty");
+const suggestionsEl = document.getElementById("suggestions");
 const formEl = document.getElementById("chat-form");
 const inputEl = document.getElementById("question");
 const sendBtn = document.getElementById("send");
 const newChatBtn = document.getElementById("new-chat");
+
+let busy = false;
 
 function getThreadId() {
   let id = localStorage.getItem("thread_id");
@@ -15,33 +26,73 @@ function getThreadId() {
   return id;
 }
 
-function addMessage(text, role) {
-  const div = document.createElement("div");
-  div.className = "msg " + role;
-  div.textContent = text; // textContent is safe: it never runs HTML
-  messagesEl.appendChild(div);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-  return div;
+function scrollToEnd() {
+  threadEl.scrollTop = threadEl.scrollHeight;
 }
 
-function setLoading(isLoading) {
-  sendBtn.disabled = isLoading;
-  inputEl.disabled = isLoading;
+function setBusy(isBusy) {
+  busy = isBusy;
+  sendBtn.disabled = isBusy;
+  inputEl.disabled = isBusy;
 }
 
-function greet() {
-  addMessage("Hi! Ask me about GreenTech's products, warranty, returns or shipping.", "bot");
+// Turns "(file.pdf, p. 3)" in an answer into a highlighted chip.
+// Everything is added as text nodes, so the answer can never run HTML.
+const CITATION = /\(([^()]*\.pdf[^()]*)\)/gi;
+
+function renderAnswer(el, text) {
+  el.className = "a";
+  el.replaceChildren();
+  let last = 0;
+  for (const match of text.matchAll(CITATION)) {
+    if (match.index > last) el.append(text.slice(last, match.index));
+    const chip = document.createElement("span");
+    chip.className = "cite";
+    chip.textContent = match[1].trim();
+    el.append(chip);
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) el.append(text.slice(last));
 }
 
-formEl.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const question = inputEl.value.trim();
-  if (!question) return;
+function showWaiting(el) {
+  el.className = "a waiting";
+  const dots = document.createElement("span");
+  dots.className = "dots";
+  for (let i = 0; i < 3; i++) dots.append(document.createElement("span"));
+  el.replaceChildren(dots, "Searching your documents");
+}
 
-  addMessage(question, "user");
+function showError(el, message) {
+  el.className = "a error";
+  el.textContent = message;
+}
+
+function addTurn(question) {
+  const turn = document.createElement("article");
+  turn.className = "turn";
+
+  const q = document.createElement("p");
+  q.className = "q";
+  q.textContent = question;
+
+  const a = document.createElement("p");
+  showWaiting(a);
+
+  turn.append(q, a);
+  threadEl.append(turn);
+  scrollToEnd();
+  return a;
+}
+
+async function ask(question) {
+  question = question.trim();
+  if (!question || busy) return;
+
+  emptyEl.hidden = true;
+  const answerEl = addTurn(question);
   inputEl.value = "";
-  setLoading(true);
-  const reply = addMessage("Thinking...", "bot");
+  setBusy(true);
 
   try {
     const response = await fetch(API_URL, {
@@ -49,22 +100,38 @@ formEl.addEventListener("submit", async (event) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question: question, thread_id: getThreadId() }),
     });
-    const data = await response.json();
-    reply.textContent = response.ok ? data.answer : (data.error || "Something went wrong.");
+    const data = await response.json().catch(() => ({}));
+    if (response.ok) {
+      renderAnswer(answerEl, data.answer);
+    } else {
+      showError(answerEl, data.error || "The server returned an error. Check the Flask terminal for details.");
+    }
   } catch (error) {
-    reply.textContent = "Cannot reach the server. Is Flask running?";
+    showError(answerEl, "Can't reach the server. Start it with python app.py, then ask again.");
   } finally {
-    setLoading(false);
+    setBusy(false);
+    scrollToEnd();
     inputEl.focus();
   }
+}
+
+formEl.addEventListener("submit", (event) => {
+  event.preventDefault();
+  ask(inputEl.value);
 });
 
 newChatBtn.addEventListener("click", () => {
-  localStorage.removeItem("thread_id"); // next message gets a fresh thread_id
-  messagesEl.innerHTML = "";            // safe here: we are only clearing
-  greet();
+  localStorage.removeItem("thread_id"); // the next message starts a fresh memory
+  threadEl.querySelectorAll(".turn").forEach((turn) => turn.remove());
+  emptyEl.hidden = false;
+  inputEl.focus();
 });
 
-greet();
-
- 
+for (const text of SUGGESTIONS) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "suggestion";
+  button.textContent = text;
+  button.addEventListener("click", () => ask(text));
+  suggestionsEl.append(button);
+}

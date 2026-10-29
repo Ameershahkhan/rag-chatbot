@@ -3,22 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tech Assistant</title>
+  <meta name="color-scheme" content="light" />
+  <title>RAG Chatbot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600&family=Newsreader:opsz,wght@6..72,400;6..72,600&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="chat">
-    <header>
-      <h1>Tech Assistant</h1>
-      <button id="new-chat" type="button">New chat</button>
+  <div class="page">
+    <header class="top">
+      <div>
+        <h1>Study assistant</h1>
+        <p class="sub">Answers come from your PDFs, with page citations.</p>
+      </div>
+      <button id="new-chat" class="text-btn" type="button">New chat</button>
     </header>
-    <div id="messages" class="messages" aria-live="polite"></div>
-    <form id="chat-form">
+
+    <main id="thread" class="thread" aria-live="polite">
+      <section id="empty" class="empty">
+        <p class="empty-title">Ask a question about your documents.</p>
+        <div id="suggestions" class="suggestions"></div>
+      </section>
+    </main>
+
+    <form id="chat-form" class="composer">
+      <label class="sr-only" for="question">Your question</label>
       <input id="question" type="text" autocomplete="off" required
-             placeholder="Ask about warranty, returns, shipping..." />
-      <button id="send" type="submit">Send</button>
+             placeholder="Ask about your documents" />
+      <button id="send" type="submit">Ask</button>
     </form>
-  </main>
+  </div>
   <script src="app.js"></script>
 </body>
 </html>
