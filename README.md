@@ -1,4 +1,4 @@
-# [Project name] – RAG Chatbot with Memory
+# RAG Chatbot with Memory
 
 ![Screenshot](docs/rag-chatbot.png)
 
