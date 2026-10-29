@@ -14,44 +14,10 @@ load_dotenv()
 
 KNOWLEDGE_DIR = "knowledge"
 INDEX_PATH = "index/store.json"
-TOPIC = "the loaded documents"  # change this to describe your PDFs
+TOPIC = "the PNY Agentic AI course lectures on LangChain, Groq, memory, tools and RAG"
 
 model = init_chat_model("groq:openai/gpt-oss-120b")
 
-
-
-def load_chunks(path="knowledge/greentech.txt"):
-    text = Path(path).read_text(encoding="utf-8")
-    doc = Document(page_content=text, metadata={"source" : "greentech.txt"})
-    splitter = RecursiveCharacterTextSplitter(chunk_size=130, chunk_overlap=30)
-    return splitter.split_documents([doc])
-
-
-def build_vector_store(chunks):
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
-    )
-
-    store = InMemoryVectorStore(embedding=embeddings)
-    store.add_documents(chunks)
-    return store
-
-
-def answer_question(store, question, k=3):
-    results = store.similarity_search(question, k=k)
-    context = "\n".join(r.page_content for r in results)
-
-    prompt = f"""
-        You are a helpful assistant for GreenTech.
-        Answer the question using ONLY the context below.
-        If the answer is not in the context, say: "I don't know based on the provided information."
-
-        context: {context}
-        question: {question}
-        """
-
-    reply = model.invoke(prompt)
-    return reply.content, results
 
 
 SYSTEM_PROMPT = f"""You are a helpful assistant that answers questions about {TOPIC}.
@@ -66,7 +32,7 @@ Greetings and small talk do not need the tool."""
 def make_agent(store):
     @tool
     def search_knowledge(query: str) -> str:
-        """Search the loaded documents for relevant passages. Use this for any
+        """Search the loaded dpython3 -m http.server 8000ocuments for relevant passages. Use this for any
         question about the content of the documents."""
         results = store.similarity_search(query, k=4)
         return "\n\n".join(
